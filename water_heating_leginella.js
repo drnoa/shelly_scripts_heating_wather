@@ -1,4 +1,4 @@
-//VERSION: 1
+//VERSION: 
 /**
 * This script forms a simple logic for the prevention of legionella 
 * in heating water tanks by means of a heating rod control. 
@@ -7,100 +7,54 @@
 * and therefore the next legionella switching can take place later.
 * Notifications will be sent over Telegram
  */
-
-let CONFIG = {
+const CONFIG = {
   // the bot api key taken from the Telegram BotFather
   baseUrl:
     "https://api.telegram.org/bot64XXXXXX33:AAH24shXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  chatID: "519xxxxxx",
-  identName: "ShellyNotBot",
-  timeoutBeforeAlert: 24 * 60 * 60 * 1000, //once in a week 7*24*60*60*1000
-  checkInterval: 60*60*1000,
-  alertTimer: null,
+  chatID: "519xxxxxx", // the chat ID for the bot
+  timeoutBeforeAlert: 24 * 60 * 60 * 1000, // once in a week 7*24*60*60*1000
+  checkInterval: 60 * 60 * 1000, // interval to check for conditions
   tempHigh: 54, // temp to reach to reset timer
-  // if set to true, the script will print debug messages in the console
-  debug: true,
+  debug: false, // if set to true, the script will print debug messages in the console
 };
 
-let TelegramBot = {
-  /**
-   * Initializes the bot by emitting the specified event to start polling for updates.
-   */
-  initTel: function () {
-    Shelly.call(
-      "KVS.Get",
-      { key: "identName" },
-      function (data, error) {
+const TelegramBot = {
+  initTel: () => {
+    const keys = ["baseUrl", "chatID"];
+    keys.forEach(key => {
+      Shelly.call("KVS.Get", { key }, (data, error) => {
         let value = 0;
         if (error !== 0) {
-          console.log(
-            "Cannot read the value for the provided key, reason, using default value. identName"
-          );
+          console.log("Cannot read the value for the provided key, reason, using default value. identName");
         } else {
           value = data.value;
         }
         this.messageOffset = value;
-        Shelly.emitEvent(CONFIG.identName);
-      }.bind(this)
-    );
-    Shelly.call(
-      "KVS.Get",
-      { key: "baseUrl" },
-      function (data, error) {
-        let value = 0;
-        if (error !== 0) {
-          console.log(
-            "Cannot read the value for the provided key, reason, using default value. baseUrl" 
-          );
-        } else {
-          value = data.value;
-        }
-        this.messageOffset = value;
-        Shelly.emitEvent(CONFIG.baseUrl);
-      }.bind(this)
-    );
-    Shelly.call(
-      "KVS.Get",
-      { key: "chatID" },
-      function (data, error) {
-        let value = 0;
-        if (error !== 0) {
-          console.log(
-            "Cannot read the value for the provided key, reason, using default value. chatID"
-          );
-        } else {
-          value = data.value;
-        }
-        this.messageOffset = value;
-        Shelly.emitEvent(CONFIG.chatID);
-      }.bind(this)
-    );
+        Shelly.emitEvent(CONFIG[key]);
+      });
+    });
   },
-  directMessage: function (textMsg) {
+  directMessage: (textMsg) => {
     if (CONFIG.debug) {
       console.log("SENDING", textMsg, CONFIG.chatID);
     }
 
-    Shelly.call(
-      "HTTP.GET",
-      {
-        url:
+    Shelly.call("HTTP.GET", {
+      url:
           CONFIG.baseUrl +
           "/sendMessage?chat_id=" +
           CONFIG.chatID +
           "&text=" +
           textMsg,
-        timeout: 1,
-      },
-      function (d, r, m) {
-        if (CONFIG.debug) {
-          console.log("MSG SENT", JSON.stringify(d), r, m);
-        }
+      timeout: 1,
+    }, (d, r, m) => {
+      if (CONFIG.debug) {
+        console.log("MSG SENT", JSON.stringify(d), r, m);
       }
-    );
+    });
   },
-
 };
+
 
 
 
@@ -147,7 +101,9 @@ let LegionellaTimer = {
   startLegionellen: function(ud) {
     TelegramBot.directMessage("Legionellen Schaltung aktiv");
     print("Legionellen Start");
-
+    Shelly.call("Switch.GetConfig", { }, (response) => {
+      TelegramBot.directMessage(JSON.stringify(response);
+    }
 
   },
   //check if the temp of sensor is higher than
@@ -177,15 +133,6 @@ let LegionellaTimer = {
  * initializes the bot and setting up event listeners.
  */
 function init() {
-  Shelly.addEventHandler(function (data) {
-    if (
-      typeof data === "undefined" ||
-      typeof data.info === "undefined" ||
-      data.info.event !== CONFIG.identName
-    ) {
-      return;
-    }
-  });
   TelegramBot.initTel();
   LegionellaTimer.initLeg();
   
