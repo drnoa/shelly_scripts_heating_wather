@@ -18,43 +18,31 @@ const CONFIG = {
   debug: false, // if set to true, the script will print debug messages in the console
 };
 
-const TelegramBot = {
-  initTel: () => {
-    const keys = ["baseUrl", "chatID"];
-    keys.forEach(key => {
-      Shelly.call("KVS.Get", { key }, (data, error) => {
-        let value = 0;
-        if (error !== 0) {
-          console.log("Cannot read the value for the provided key, reason, using default value. identName");
-        } else {
-          value = data.value;
-        }
-        this.messageOffset = value;
-        Shelly.emitEvent(CONFIG[key]);
-      });
-    });
-  },
-  directMessage: (textMsg) => {
+let TelegramBot = {
+  directMessage: function (textMsg) {
     if (CONFIG.debug) {
       console.log("SENDING", textMsg, CONFIG.chatID);
     }
 
-    Shelly.call("HTTP.GET", {
-      url:
+    Shelly.call(
+      "HTTP.GET",
+      {
+        url:
           CONFIG.baseUrl +
           "/sendMessage?chat_id=" +
           CONFIG.chatID +
           "&text=" +
           textMsg,
-      timeout: 1,
-    }, (d, r, m) => {
-      if (CONFIG.debug) {
-        console.log("MSG SENT", JSON.stringify(d), r, m);
+        timeout: 1,
+      },
+      function (d, r, m) {
+        if (CONFIG.debug) {
+          console.log("MSG SENT", JSON.stringify(d), r, m);
+        }
       }
-    });
+    );
   },
 };
-
 
 
 
@@ -86,7 +74,7 @@ let LegionellaTimer = {
     );
     TelegramBot.directMessage("Timer Start");
     if (CONFIG.debug) {
-      console.log("Start TimerT");
+      console.log("Start Timer");
     }
   },
   // function that stop timer
@@ -94,16 +82,14 @@ let LegionellaTimer = {
     Timer.clear(alertTimer);
     TelegramBot.directMessage("Timer Stop");
     if (CONFIG.debug) {
-      console.log("Stop TimerT");
+      console.log("Stop Timer");
     }
   },
 
   startLegionellen: function(ud) {
     TelegramBot.directMessage("Legionellen Schaltung aktiv");
     print("Legionellen Start");
-    Shelly.call("Switch.GetConfig", { }, (response) => {
-      TelegramBot.directMessage(JSON.stringify(response);
-    }
+
 
   },
   //check if the temp of sensor is higher than
@@ -133,8 +119,6 @@ let LegionellaTimer = {
  * initializes the bot and setting up event listeners.
  */
 function init() {
-  TelegramBot.initTel();
   LegionellaTimer.initLeg();
-  
 }
 init();
