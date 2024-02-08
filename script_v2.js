@@ -12,18 +12,7 @@
  * further instructions of how to configure the commands
  */
 
-let CONFIG = {
-    // the bot api key taken from the BotFather
-    baseUrl:
-      "https://api.telegram.org/bot6688718887:AAHyjduEXi3DhOiR9kPy2RBp2Gv2lXpbS00",
-    chatID: "5191571364",
-    timeoutBeforeAlert: 24 * 60 * 60 * 1000, //once in a week 7*24*60*60*1000
-    checkInterval: 60*60*1000,
-    alertTimer: null,
-    tempHigh: 54, // temp to reach to reset timer
-    // if set to true, the script will print debug messages in the console
-    debug: true,
-  };
+
   
   let TelegramBot = {
     directMessage: function (textMsg) {
