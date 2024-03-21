@@ -8,19 +8,15 @@
 * Notifications will be sent over Telegram
  */
 let CONFIG = {
-  // the bot api key taken from the BotFather
+  // the bot api key taken from the Telegram BotFather
   baseUrl:
-    "https://api.telegram.org/bot6688718887:AAEOSgR64bEMIdimlziKaYW7sD7-x7ybeXs",
-  chatID: "5191571364",
-  timeoutBeforeAlert: 24 * 60 * 60 * 1000, //once in a week 7*24*60*60*1000
-  checkInterval: 60*60*1000,
-  alertTimer: null,
+    "https://api.telegram.org/bot64XXXXXX33:AAH24shXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  chatID: "519xxxxxx", // the chat ID for the bot
+  timeoutBeforeAlert: 24 * 60 * 60 * 1000, // once in a week 7*24*60*60*1000
+  checkInterval: 60 * 60 * 1000, // interval to check for conditions
   tempHigh: 54, // temp to reach to reset timer
-  // if set to true, the script will print debug messages in the console
-  debug: true,
+  debug: false, // if set to true, the script will print debug messages in the console
 };
-
-
 let TelegramBot = {
   directMessage: function (textMsg) {
     if (CONFIG.debug) {
@@ -49,6 +45,7 @@ let TelegramBot = {
 
 
 
+
 // Leginella optimizing
 // 
 //
@@ -67,8 +64,17 @@ let LegionellaTimer = {
   },
   //functions that start timer
   startTimer: function () {
+    acttimeoutBeforeAlert = CONFIG.timeoutBeforeAlert;
+    // if last timer run is older than timeoutBeforeAlert
+    if (Date.now() - getLastTimerRun() > CONFIG.timeoutBeforeAlert || getLastTimerRun() == 0) {
+      acttimeoutBeforeAlert = CONFIG.timeoutBeforeAlert;
+    // if last timer run is younger than timeoutBeforeAlert
+    } else {
+      acttimeoutBeforeAlert = Date.now() - getLastTimerRun();
+    }
+    
     alertTimer = Timer.set(
-      CONFIG.timeoutBeforeAlert,
+      acttimeoutBeforeAlert,
       true,
       function (ud) {
         LegionellaTimer.startLegionellen(ud);
