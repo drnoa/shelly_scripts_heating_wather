@@ -7,16 +7,19 @@
 * and therefore the next legionella switching can take place later.
 * Notifications will be sent over Telegram
  */
-const CONFIG = {
-  // the bot api key taken from the Telegram BotFather
+let CONFIG = {
+  // the bot api key taken from the BotFather
   baseUrl:
-    "https://api.telegram.org/bot64XXXXXX33:AAH24shXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  chatID: "519xxxxxx", // the chat ID for the bot
-  timeoutBeforeAlert: 24 * 60 * 60 * 1000, // once in a week 7*24*60*60*1000
-  checkInterval: 60 * 60 * 1000, // interval to check for conditions
+    "https://api.telegram.org/bot6688718887:AAEOSgR64bEMIdimlziKaYW7sD7-x7ybeXs",
+  chatID: "5191571364",
+  timeoutBeforeAlert: 24 * 60 * 60 * 1000, //once in a week 7*24*60*60*1000
+  checkInterval: 60*60*1000,
+  alertTimer: null,
   tempHigh: 54, // temp to reach to reset timer
-  debug: false, // if set to true, the script will print debug messages in the console
+  // if set to true, the script will print debug messages in the console
+  debug: true,
 };
+
 
 let TelegramBot = {
   directMessage: function (textMsg) {
@@ -76,6 +79,7 @@ let LegionellaTimer = {
     if (CONFIG.debug) {
       console.log("Start Timer");
     }
+    saveLastTimerRun(Date.now());
   },
   // function that stop timer
   stopTimer: function () {
@@ -99,14 +103,17 @@ let LegionellaTimer = {
       { id: 102 },
       function (response) {
         if (JSON.stringify(Math.round(response.tC)) > CONFIG.tempHigh) {
-          alert("Temp higher than tempHigh");
-          print(JSON.stringify(Math.round(response.tC)));
+          if (CONFIG.debug) {
+            console.log("Temp higher than tempHigh");
+            console.log(JSON.stringify(Math.round(response.tC)));
+          }
           TelegramBot.directMessage("Aktuelle Temperatur höher als Zielwert: "+JSON.stringify(Math.round(response.tC)));
           this.stopTimer();
           this.startTimer();
 
-        };
-        TelegramBot.directMessage("Aktuelle Temperatur: "+JSON.stringify(Math.round(response.tC)));
+        }else{
+          TelegramBot.directMessage("Aktuelle Temperatur: "+JSON.stringify(Math.round(response.tC)));
+        }
       },
       null
     );
@@ -115,6 +122,32 @@ let LegionellaTimer = {
 
 }
 
+function getLastTimerRun ( ) {
+  Shelly.call(
+    "KVS.Get",
+    { key: "getLastTimerRun" },
+    function (data, error) {
+      let value = 0;
+      if (error !== 0) {
+        console.log(
+          "Cannot read the value for the provided key, reason, using default value. getLastTimerRun" 
+        );
+      } else {
+        if (CONFIG.debug) {
+          console.log(data.value);
+        }
+        return data.value; 
+      }
+    }
+  );
+
+}
+function saveLastTimerRun (value) {
+    Shelly.call(
+      "KVS.Set",
+      { "key": "getLastTimerRun", "value": value }
+  );
+}
 /**
  * initializes the bot and setting up event listeners.
  */
